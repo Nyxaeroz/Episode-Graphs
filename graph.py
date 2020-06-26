@@ -38,7 +38,7 @@ root = ET.fromstring(xml_overall)
 # TODO: movie functionality
 if root[0].attrib['type'] != 'series':
     print("This program only supports series")
-    exit
+    exit()
 
 
 # obtain data
