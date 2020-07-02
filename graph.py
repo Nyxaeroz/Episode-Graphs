@@ -3,10 +3,11 @@ from matplotlib import pyplot as plt
 import omdb
 import xml.etree.ElementTree as ET
 import numpy as np
+import mplcursors
 
 # Default values
 MY_KEY = 'xxxxxxxx'
-TITLE  = 'Breaking Bad' 
+TITLE  = 'Breaking Bad'  
 DATA = []
 
 # read key (stored seperately)
@@ -75,31 +76,41 @@ while True:
     if current_season == int(xml_season_info.attrib['totalSeasons']):
         break
 
-# plot data
-last_ep_plotted = 0
-for snr in range(0,len(DATA)):
-    season_data = DATA[snr]
-    data_x = [last_ep_plotted + i for i in range(1,1+len(season_data))]
-    plt.scatter(data_x, season_data, label='season {} ({})'.format(snr + 1, np.round(np.average(season_data),2)))
-    last_ep_plotted += len(season_data)
+def scatterplot():
+    # plot data
+    last_ep_plotted = 0
+    for snr in range(0,len(DATA)):
+        season_data = DATA[snr]
+        data_x = [last_ep_plotted + i for i in range(1,1+len(season_data))]
+        plt.scatter(data_x, season_data, label='season {} ({})'.format(snr + 1, np.round(np.average(season_data),2)))
+        last_ep_plotted += len(season_data)
 
-    # plot seasons trendline
-    z = np.polyfit(data_x, season_data, 1)
+        # plot seasons trendline
+        z = np.polyfit(data_x, season_data, 1)
+        p = np.poly1d(z)
+        plt.plot(data_x,p(data_x),"-")
+
+    #plot series trendline
+    flat_data  = [item for sublist in DATA for item in sublist]
+    flat_xaxis = [i for i in range(1,len(flat_data) + 1)]
+    z = np.polyfit(flat_xaxis, flat_data, 1)
     p = np.poly1d(z)
-    plt.plot(data_x,p(data_x),"-")
+    plt.plot(flat_xaxis,p(flat_xaxis),"r--")
 
-#plot series trendline
-flat_data  = [item for sublist in DATA for item in sublist]
-flat_xaxis = [i for i in range(1,len(flat_data) + 1)]
-z = np.polyfit(flat_xaxis, flat_data, 1)
-p = np.poly1d(z)
-plt.plot(flat_xaxis,p(flat_xaxis),"r--")
+    # plot make-up
+    plt.legend()
+    plt.xlabel('Episodes')
+    plt.ylabel('Ratings')
+    plt.title('Episode ratings for {}'.format(TITLE))
 
-# plot make-up
-plt.legend()
-plt.xlabel('Episodes')
-plt.ylabel('Ratings')
-plt.title('Episode ratings for {}'.format(TITLE))
+    mplcursors.cursor(hover=True)
 
-plt.show()
+    # for future implementation: custom labels (in this case on click)
+    # labels = [i for i in range(1, last_ep_plotted+1)]
+    # mplcursors.cursor(plt.figure(1)).connect(
+    #     "add", lambda sel: sel.annotation.set_text(labels[sel.target.index]))
+
+    plt.show()
+
+scatterplot()
 
