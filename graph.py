@@ -6,7 +6,7 @@ import numpy as np
 
 # Default values
 MY_KEY = 'xxxxxxxx'
-TITLE  = 'Breaking bad' 
+TITLE  = 'Breaking Bad' 
 DATA = []
 
 # read key (stored seperately)
@@ -29,11 +29,15 @@ if MY_KEY == 'xxxxxxxx':
 #                          actors, plot, language, country, awards, poster (rul), metascore,
 #                          imdbRating, imdbVotes, imdbID, type />
 # < /root >
-omdb.set_default('tomatoes',True)
-client = omdb.OMDBClient(apikey=MY_KEY)
-overall = client.request(t=TITLE,r='xml')
-xml_overall = overall.content
-root = ET.fromstring(xml_overall)
+try:
+    omdb.set_default('tomatoes',True)
+    client = omdb.OMDBClient(apikey=MY_KEY)
+    overall = client.request(t=TITLE,r='xml')
+    xml_overall = overall.content
+    root = ET.fromstring(xml_overall)
+except:
+    print("Error on request. It may take some time for your key to be validated.")
+    exit()
 
 # TODO: movie functionality
 if root[0].attrib['type'] != 'series':
@@ -54,12 +58,19 @@ while True:
     season_info = client.request(t=TITLE,r='xml',season=current_season)
     xml_season_info = ET.fromstring(season_info.content)
 
+    # annoyingly enough, a bad request uses 'response' while a successful one uses 'Response', hence the try/except
+    try:
+        if xml_season_info.attrib['Response'] == 'True': pass
+    except:
+        print('Error on season request')
+        exit()
+
     # extract useful data to array
     # TODO: currently only ratings
     try:
         DATA.append([float(episode.attrib['imdbRating']) for episode in xml_season_info])
     except:
-        print('Your series has an invalid format: episode rating missing (season {})'.format(current_season))
+        print('Your series has an invalid format: episode rating missing (season {})'.format(current_season), 'Skippping this season')
     
     if current_season == int(xml_season_info.attrib['totalSeasons']):
         break
@@ -91,3 +102,4 @@ plt.ylabel('Ratings')
 plt.title('Episode ratings for {}'.format(TITLE))
 
 plt.show()
+
